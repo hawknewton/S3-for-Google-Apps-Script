@@ -10,15 +10,21 @@ const base64Encode = (data) => {
 };
 
 const computeDigest = (algorithm, data, charset) => {
-  if(algorithm != 'MD5') {
-    throw('I only know how to MD5');
+  var alg;
+
+  if(algorithm == 'MD5') {
+    alg = 'md5';
+  } else if(algorithm == 'SHA_256') {
+    alg = 'sha256';
+  } else {
+    throw('I only know how to SHA_256 and MD5');
   }
 
   if(charset != 'UTF_8') {
     throw('I only know UTF_8');
   }
 
-  const result = crypto.createHash('md5').update(data).digest();
+  const result = crypto.createHash(alg).update(data).digest();
 
   debug(`computed md5 digest [${data}]: ${result}`);
   return result
@@ -27,23 +33,43 @@ const computeDigest = (algorithm, data, charset) => {
 const computeHmacSignature = (algorithm, value, key, charSet) => {
   debug(`${algorithm}, ${value}, ${key}, ${charSet}`);
 
-  if(algorithm != 'HMAC_SHA_1') {
-    throw('I only know HMAC_SHA_1');
+  var alg;
+
+  if(algorithm == 'HMAC_SHA_1') {
+    alg = 'sha1';
+  } else if(algorithm == 'HMAC_SHA_256') {
+    alg = 'sha256'
+  } else  {
+    throw('I only know HMAC_SHA_1 and HMAC_SHA_256');
   }
 
   if(charSet != 'UTF_8') {
     throw('I only speak UTF_8');
   }
 
-  const hmac = crypto.createHmac('sha1', key);
+  const hmac = crypto.createHmac(alg, key);
   hmac.write(value);
   hmac.end();
 
   return hmac.read();
 };
 
-const formatDate = (format, etc) => {
-  return util.format.apply(util, arguments);
+const pad = (number) => {
+  if (number < 10) {
+    return '0' + number;
+  }
+  return number;
+};
+
+const formatDate = (date, tz, format) => {
+  return date.getUTCFullYear() +
+    pad(date.getUTCMonth() + 1) +
+    pad(date.getUTCDate()) +
+    'T' +
+    pad(date.getUTCHours()) +
+    pad(date.getUTCMinutes()) +
+    pad(date.getUTCSeconds()) +
+    'Z';
 };
 
 const formatString = (format, etc) => {
@@ -62,8 +88,8 @@ const newBlob = (obj, type) => {
 
 module.exports = {
   Charset: { UTF_8: 'UTF_8' },
-  DigestAlgorithm: { MD5: 'MD5' },
-  MacAlgorithm: { HMAC_SHA_1: 'HMAC_SHA_1' },
+  DigestAlgorithm: { MD5: 'MD5', SHA_256: 'SHA_256' },
+  MacAlgorithm: { HMAC_SHA_1: 'HMAC_SHA_1', HMAC_SHA_256: 'HMAC_SHA_256' },
   base64Encode,
   computeDigest,
   computeHmacSignature,

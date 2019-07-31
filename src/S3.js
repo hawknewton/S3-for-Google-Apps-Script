@@ -41,8 +41,8 @@
  *
  * @return {S3}
  */
-function getInstance(accessKeyId, secretAccessKey, options) {
-  return new S3(accessKeyId, secretAccessKey, options);
+function getInstance(accessKeyId, secretAccessKey, region, options) {
+  return new S3(accessKeyId, secretAccessKey, region, options);
 }
 
 /* constructs an S3 service
@@ -52,16 +52,15 @@ function getInstance(accessKeyId, secretAccessKey, options) {
  * @param {string} secretAccessKey your AWS SecretAccessKey
  * @param {Object} options key-value object of options, unused
  */
-function S3(accessKeyId, secretAccessKey, options) {
+function S3(accessKeyId, secretAccessKey, region, options) {
   if (typeof accessKeyId !== 'string') throw "Must pass accessKeyId to S3 constructor";
   if (typeof secretAccessKey !== 'string') throw "Must pass secretAcessKey to S3 constructor";
   
   this.accessKeyId = accessKeyId;
   this.secretAccessKey = secretAccessKey;
+  this.region = region;
   this.options = options | {};
 }
-
-
 
 /* creates bucket in S3
  *
@@ -76,20 +75,17 @@ S3.prototype.createBucket = function (bucket, options) {
   
   var request = new S3Request(this);
   request.setHttpMethod('PUT');
-  
+
   //this is dumb and is optional from AWS perspective
   //but UrlFetchApp will default a Content-Type header to application/xml-www-form-url-encoded or whatever, which 
   //screws up the signature of the request
   request.setContentType('text/plain');
-  
   //support setting of ACL
   if (typeof options["x-amz-acl"] == 'undefined') {
     options["x-amz-acl"] = "private";
   }
   request.addHeader("x-amz-acl", options["x-amz-acl"]);
-  
   request.setBucket(bucket);
-  
   request.execute(options);
   
 };
