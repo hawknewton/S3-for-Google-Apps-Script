@@ -1,0 +1,27 @@
+{
+  "name": "s3-for-google-apps-script",
+  "version": "1.0.0",
+  "description": "An API binding for using AWS Simple Storage Service (S3) from Google Apps Script.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hawknewton/S3-for-Google-Apps-Script.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hawknewton/S3-for-Google-Apps-Script/issues"
+  },
+  "homepage": "https://github.com/hawknewton/S3-for-Google-Apps-Script#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.503.0",
+    "dotenv": "^8.0.0",
+    "gas-local": "^1.3.1",
+    "jest": "^24.8.0",
+    "md5": "^2.2.1",
+    "sync-request": "^6.1.0"
+  }
+}
