@@ -120,7 +120,6 @@ S3Request.prototype.execute = function(options) {
 
   const contentHash = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, this.content, Utilities.Charset.UTF_8);
   this.headers['x-amz-content-sha256'] = this.toHexString_(contentHash);
-  this.headers.Host = this.getHostName_();
 
   if(this.getContentType()) {
     this.headers['Content-Type'] = this.getContentType();
@@ -254,6 +253,7 @@ S3Request.prototype.getLowerCaseHeaders_ = function() {
   for(var name in this.headers) {
     lowerCaseHeaders[name.toLowerCase()] = this.headers[name];
   }
+  lowerCaseHeaders.host = this.getHostName_();
 
   return lowerCaseHeaders;
 };
