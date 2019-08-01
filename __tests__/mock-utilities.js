@@ -30,24 +30,10 @@ const computeDigest = (algorithm, data, charset) => {
   return result
 };
 
-const computeHmacSignature = (algorithm, value, key, charSet) => {
-  debug(`${algorithm}, ${value}, ${key}, ${charSet}`);
+const computeHmacSha256Signature = (value, key) => {
+  debug(`computeHMacSha256Signature: ${value}, ${key}`);
 
-  var alg;
-
-  if(algorithm == 'HMAC_SHA_1') {
-    alg = 'sha1';
-  } else if(algorithm == 'HMAC_SHA_256') {
-    alg = 'sha256'
-  } else  {
-    throw('I only know HMAC_SHA_1 and HMAC_SHA_256');
-  }
-
-  if(charSet != 'UTF_8') {
-    throw('I only speak UTF_8');
-  }
-
-  const hmac = crypto.createHmac(alg, key);
+  const hmac = crypto.createHmac('sha256', key);
   hmac.write(value);
   hmac.end();
 
@@ -83,6 +69,7 @@ const newBlob = (obj, type) => {
     copyBlob: jest.fn(),
     getDataAsString: () => obj,
     getContentType: () => type,
+    getBytes: () => obj
   };
 };
 
@@ -92,7 +79,7 @@ module.exports = {
   MacAlgorithm: { HMAC_SHA_1: 'HMAC_SHA_1', HMAC_SHA_256: 'HMAC_SHA_256' },
   base64Encode,
   computeDigest,
-  computeHmacSignature,
+  computeHmacSha256Signature,
   formatDate,
   formatString,
   newBlob

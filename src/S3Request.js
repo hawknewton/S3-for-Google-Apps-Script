@@ -168,6 +168,7 @@ S3Request.prototype.execute = function(options) {
         name = name.charAt(0).toLowerCase() + name.slice(1);
         error[name] = errorXmlElements[i].getText();
       }
+
       error.toString = function() { return "AWS Error - "+this.code+": "+this.message; };
 
       error.httpRequestLog = this.service.getLastExchangeLog();
@@ -193,15 +194,17 @@ S3Request.prototype.execute = function(options) {
  */
 S3Request.prototype.getAuthHeader_ = function () {
   const signingKey = this.getSigningKey_();
-  const signature = this.toHexString_(Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, this.getStringToSign(), signingKey, Utilities.Charset.UTF_8));
+  const signature = this.toHexString_(Utilities.computeHmacSha256Signature(Utilities.newBlob(this.getStringToSign()).getBytes(), signingKey));
 
-  return 'AWS4-HMAC-SHA256 ' +
+  const authHeader = 'AWS4-HMAC-SHA256 ' +
     'Credential=' + this.service.accessKeyId +
     '/' + this.getUTCDate_() +
     '/' + this.service.region +
     '/s3/aws4_request,SignedHeaders=' +
     this.getSortedHeaderNames_().join(';') +
     ',Signature=' + signature;
+
+  return authHeader;
 };
 
 S3Request.prototype.getCanonicalRequest = function() {
@@ -218,7 +221,9 @@ S3Request.prototype.getCanonicalRequest = function() {
 
   requestStr += sortedHeaderNames.map(function(name) { return name + ':' + lowerCaseHeaders[name] }).join("\n");
   requestStr += "\n\n" + sortedHeaderNames.join(';') + "\n"
-  return requestStr + this.toHexString_(contentHash);
+  requestStr += this.toHexString_(contentHash);
+
+  return requestStr;
 };
 
 S3Request.prototype.getStringToSign = function() {
@@ -242,10 +247,11 @@ S3Request.prototype.getUTCDate_ = function(err) {
 };
 
 S3Request.prototype.getSigningKey_ = function() {
-  const dateKey = Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, this.getUTCDate_(), 'AWS4' + this.service.secretAccessKey, Utilities.Charset.UTF_8);
-  const dateRegionKey = Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, this.service.region, dateKey, Utilities.Charset.UTF_8);
-  const dateRegionServiceKey = Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, 's3', dateRegionKey, Utilities.Charset.UTF_8);
-  return Utilities.computeHmacSignature(Utilities.MacAlgorithm.HMAC_SHA_256, 'aws4_request', dateRegionServiceKey, Utilities.Charset.UTF_8);
+  const dateKey = Utilities.computeHmacSha256Signature(this.getUTCDate_(), 'AWS4' + this.service.secretAccessKey);
+  const dateRegionKey = Utilities.computeHmacSha256Signature(Utilities.newBlob(this.service.region).getBytes(), dateKey);
+  const dateRegionServiceKey = Utilities.computeHmacSha256Signature(Utilities.newBlob('s3').getBytes(), dateRegionKey);
+  const signingKey = Utilities.computeHmacSha256Signature(Utilities.newBlob('aws4_request').getBytes(), dateRegionServiceKey);
+  return signingKey;
 };
 
 S3Request.prototype.getLowerCaseHeaders_ = function() {
